@@ -1,0 +1,18 @@
+# 가상환경 폴더 (venv 또는 env 등 본인이 만든 이름)
+depj1/
+depj1/
+.depj1/
+
+# 파이썬 컴파일 파일 (불필요)
+__pycache__/
+*.pyc
+
+# 보안 파일 (절대 올리면 안 됨!)
+*.json
+keys/
+secrets/
+.env
+
+# 운영체제 잡동사니 파일
+.DS_Store
+Thumbs.db
