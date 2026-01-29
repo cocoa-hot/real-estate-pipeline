@@ -1,0 +1,29 @@
+import pandas as pd
+import random
+
+def create_mock_data():
+    # 문서 에 명시된 필수 컬럼 기반
+    data = {
+        '거래금액': [f"{random.randint(50000, 200000)},000" for _ in range(10)], # 예: "150,000" (문자열)
+        '건축년도': [random.randint(1990, 2023) for _ in range(10)],
+        '년': ['2024'] * 10,
+        '월': ['1'] * 10,
+        '일': [str(random.randint(1, 30)) for _ in range(10)],
+        '아파트': [f'테스트아파트_{i}단지' for i in range(10)],
+        '지번': [f'{random.randint(100, 900)}-{random.randint(1, 20)}' for _ in range(10)],
+        '전용면적': [f'{random.choice([59.9, 84.9, 112.5])}' for _ in range(10)],
+        '층': [str(random.randint(1, 25)) for _ in range(10)],
+        '구이름': ['종로구'] * 10,  # 추가 정보
+        '구코드': ['11110'] * 10
+    }
+    
+    df = pd.DataFrame(data)
+    
+    # CSV 파일로 저장
+    file_name = "mock_real_estate_data.csv"
+    df.to_csv(file_name, index=False, encoding='utf-8-sig')
+    print(f"✅ 가상 데이터 생성 완료: {file_name}")
+    print(df.head())
+
+if __name__ == "__main__":
+    create_mock_data()

@@ -1,6 +1,2 @@
-#pip install pandas numpy requests beautifulsoup4
-#pip install google-cloud-bigquery google-cloud-storage
-#pip install apache-airflow
-#pip install streamlit plotly
-
+#pip install pandas numpy requests beautifulsoup4 google-cloud-bigquery google-cloud-storage python-dotenv
 
