@@ -180,6 +180,71 @@ default_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
+def transform_data(**context):
+
+    # 1. BigQuery 클라이언트 연결
+    client = bigquery.Client.from_service_account_json(KEY_PATH)
+
+    # 2. 테이블 경로 설정
+    # 원본 테이블
+    source_table = f"{PROJECT_ID}.{DATASET_ID}.raw_rent_transactions"
+    # 새로 만들 가공 테이블
+    target_table = f"{PROJECT_ID}.{DATASET_ID}.rent_market_view"
+
+    # 3. SQL 쿼리
+    query = f"""
+    CREATE OR REPLACE TABLE `{target_table}` AS
+    SELECT
+        district_name,
+        dong,
+        name AS building_name,
+        build_year,
+        floor,
+        
+        -- 날짜 분해
+        PARSE_DATE('%Y%m', year_month) AS deal_date,
+        EXTRACT(YEAR FROM PARSE_DATE('%Y%m', year_month)) AS deal_year,
+        EXTRACT(MONTH FROM PARSE_DATE('%Y%m', year_month)) AS deal_month,
+
+        -- 면적 계산
+        area AS area_m2,
+        ROUND(area / 3.3058, 1) AS area_pyung, -- 평수
+
+        -- 금액 변환
+        deposit,
+        monthly_rent,
+
+        -- 보기 좋은 문자열
+        CASE 
+            WHEN deposit >= 10000 THEN 
+                CONCAT(CAST(FLOOR(deposit / 10000) AS STRING), '억 ', 
+                       IF(MOD(deposit, 10000) > 0, CONCAT(CAST(MOD(deposit, 10000) AS STRING), '만원'), ''))
+            ELSE CONCAT(CAST(deposit AS STRING), '만원')
+        END AS deposit_korean,
+
+        -- 전세 평단가
+        ROUND(deposit / (area / 3.3058), 0) AS deposit_per_pyung,
+        
+        -- 월세 평단가
+        CASE
+            WHEN monthly_rent > 0 THEN ROUND(monthly_rent / (area / 3.3058), 0)
+            ELSE 0
+        END AS rent_per_pyung,
+
+        IF(monthly_rent = 0, 'Jeonse', 'Monthly') AS rent_type
+
+    FROM `{source_table}`
+    ORDER BY deal_date DESC
+    """
+
+    try:
+        query_job = client.query(query)  # API 요청
+        query_job.result()  # 결과가 나올 때까지 기다림
+        print(f"테이블 생성됨: {target_table}")
+    except Exception as e:
+        print(f"에러 발생: {e}")
+        raise e
+
 with DAG(
     dag_id='auto_rent_pipeline',
     default_args=default_args,
